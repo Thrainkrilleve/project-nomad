@@ -79,7 +79,7 @@ At its core, however, NOMAD is still very lightweight. For a barebones installat
 - Processor: 2 GHz dual-core processor or better
 - RAM: 4GB system memory (the whole stack without AI runs in under 1 GB)
 - Storage: At least 5 GB free disk space (plan for 10 GB to install comfortably)
-- OS: Debian-based (Ubuntu 26.04 LTS recommended)
+- OS: Debian-based (Ubuntu 26.04 LTS recommended), or Windows with Docker Desktop (see [Windows (Docker Desktop)](admin/docs/getting-started.md#windows-docker-desktop))
 - Stable internet connection (required during install only)
 
 Adding the AI Assistant brings the install to roughly **25 GB**, because Ollama and a general-purpose model are both large, and a model needs about its download size in memory while it answers. That memory comes from VRAM if you have a discrete GPU and from system RAM if you do not, which is the single biggest reason the figures below are so much higher.
@@ -91,7 +91,7 @@ To run LLMs and other included AI tools:
 - RAM: 32 GB system memory
 - Graphics: NVIDIA RTX 3060 or AMD equivalent or better (more VRAM = run larger models)
 - Storage: At least 250 GB free disk space (preferably on SSD)
-- OS: Debian-based (Ubuntu 26.04 LTS recommended)
+- OS: Debian-based (Ubuntu 26.04 LTS recommended), or Windows with Docker Desktop (see [Windows (Docker Desktop)](admin/docs/getting-started.md#windows-docker-desktop))
 - Stable internet connection (required during install only)
 
 **For detailed build recommendations at three price points ($150–$1,000+), see the [Hardware Guide](https://www.projectnomad.us/hardware).**
@@ -115,7 +115,7 @@ To test internet connectivity, NOMAD first attempts to make a request to Cloudfl
 You can override the endpoint used for this check in two ways. The connectivity test URL can be configured from the UI under **Settings → Advanced** (stored locally on your instance), or you can set the `INTERNET_STATUS_TEST_URL` environment variable. When set, the environment variable always takes precedence over the UI-configured value. If neither is set, the built-in defaults above are used.
 
 ## About Security
-By design, Project NOMAD is intended to be open and available without hurdles — it includes no authentication. If you decide to connect your device to a local network after install (e.g. for allowing other devices to access its resources), you can block/open ports to control which services are exposed.
+By design, Project NOMAD is intended to be open and available without hurdles — it includes no authentication. Published Command Center and Dozzle ports bind to `127.0.0.1` (localhost) by default. If you decide to make it reachable from other devices on a local network, set `NOMAD_BIND_ADDR=0.0.0.0` in `.env` and put a reverse proxy with TLS and authentication in front.
 
 **Will authentication be added in the future?** Maybe. It's not currently a priority, but if there's enough demand for it, we may consider building in an optional authentication layer in a future release to support use cases where multiple users need access to the same instance but with different permission levels (e.g. family use with parental controls, classroom use with teacher/admin accounts, etc.). We have a suggestion for this on our public roadmap, so if this is something you'd like to see, please upvote it here: https://roadmap.projectnomad.us/posts/1/user-authentication-please-build-in-user-auth-with-admin-user-roles
 

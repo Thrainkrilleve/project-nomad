@@ -114,17 +114,25 @@ ensure_docker_compose_file_exists() {
     echo -e "${RED}#${RESET} compose.yml file not found. Please ensure it exists at /opt/project-nomad/compose.yml."
     exit 1
   fi
+  if [ ! -f "/opt/project-nomad/.env" ]; then
+    echo -e "${RED}#${RESET} .env file not found at /opt/project-nomad/.env. This file holds APP_KEY and database passwords and is required to start the stack."
+    exit 1
+  fi
+}
+
+compose_cmd() {
+  docker compose --project-directory /opt/project-nomad --env-file /opt/project-nomad/.env -p project-nomad -f /opt/project-nomad/compose.yml "$@"
 }
 
 force_recreate() {
   echo -e "${YELLOW}#${RESET} Pulling the latest Docker images..."
-  if ! docker compose -p project-nomad -f /opt/project-nomad/compose.yml pull; then
+  if ! compose_cmd pull; then
     echo -e "${RED}#${RESET} Failed to pull the latest Docker images. Please check your network connection and the Docker registry status, then try again."
     exit 1
   fi
   
   echo -e "${YELLOW}#${RESET} Forcing recreation of containers..."
-  if ! docker compose -p project-nomad -f /opt/project-nomad/compose.yml up -d --force-recreate; then
+  if ! compose_cmd up -d --force-recreate; then
     echo -e "${RED}#${RESET} Failed to recreate containers. Please check the Docker logs for more details."
     exit 1
   fi
@@ -142,7 +150,7 @@ success_message() {
   echo -e "${GREEN}#${RESET} Project NOMAD update completed successfully!\\n"
   echo -e "${GREEN}#${RESET} Installation files are located at /opt/project-nomad\\n\n"
   echo -e "${GREEN}#${RESET} Project NOMAD's Command Center should automatically start whenever your device reboots. However, if you need to start it manually, you can always do so by running: ${WHITE_R}${nomad_dir}/start_nomad.sh${RESET}\\n"
-  echo -e "${GREEN}#${RESET} You can now access the management interface at http://localhost:8080 or http://${local_ip_address}:8080\\n"
+  echo -e "${GREEN}#${RESET} You can now access the management interface at http://127.0.0.1:8080 (localhost only by default)\\n"
   echo -e "${GREEN}#${RESET} Thank you for supporting Project NOMAD!\\n"
 }
 

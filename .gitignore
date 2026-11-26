@@ -18,6 +18,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+!install/.env.example
 
 # Credentials and keys. Never commit these — the installer generates every
 # password and app key locally at install time, so nothing real belongs in the
