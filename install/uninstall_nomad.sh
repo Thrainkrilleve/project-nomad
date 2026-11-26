@@ -122,7 +122,11 @@ storage_cleanup() {
 
 uninstall_nomad() {
     echo "Stopping and removing Project NOMAD management containers..."
-    docker compose -p project-nomad -f "${MANAGEMENT_COMPOSE_FILE}" down
+    if [ -f "${NOMAD_DIR}/.env" ]; then
+      docker compose --project-directory "${NOMAD_DIR}" --env-file "${NOMAD_DIR}/.env" -p project-nomad -f "${MANAGEMENT_COMPOSE_FILE}" down
+    else
+      docker compose --project-directory "${NOMAD_DIR}" -p project-nomad -f "${MANAGEMENT_COMPOSE_FILE}" down
+    fi
     echo "Allowing some time for management containers to stop..."
     sleep 5
 

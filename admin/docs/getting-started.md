@@ -24,6 +24,33 @@ Ubuntu Desktop is the friendlier choice if you are coming from Windows or macOS.
 
 macOS and non-Debian distributions like Fedora or Arch are not officially supported.
 
+### Windows (Docker Desktop)
+
+This repository also ships a Docker Desktop path, so the same compose stack can run on Windows without the Linux installer. You need Docker Desktop with the WSL2 engine and Docker Compose v2.24 or newer.
+
+1. Copy `install/.env.example` to a data directory (for example `D:\NOMAD\.env`). Fill in unique secrets. `APP_KEY` must be at least 16 characters, and `MYSQL_PASSWORD` must match `DB_PASSWORD`.
+2. Set the path variables for your machine:
+   - `NOMAD_HOME` — the data directory that will hold `compose.yml` and `.env`
+   - `NOMAD_STORAGE_HOST` — the Windows path bind-mounted as storage (for example `D:/NOMAD/storage`)
+   - `NOMAD_STORAGE_CONTAINER` — that same folder as the Docker daemon sees it, usually `/run/desktop/mnt/host/<drive>/<path>` (for example `/run/desktop/mnt/host/d/nomad/storage`)
+   - `NOMAD_BIND_ADDR` — leave at `127.0.0.1` for localhost only
+   - `URL` — `http://127.0.0.1:8080`
+3. From a clone of this repository:
+
+```bash
+docker compose --project-directory <data-dir> \
+  -f install/management_compose.yaml \
+  -f install/compose.windows.override.yml \
+  --env-file <data-dir>/.env up -d
+```
+
+Command Center is then at http://127.0.0.1:8080 and Dozzle at http://127.0.0.1:9999. Ports are bound to localhost by default. To listen on the LAN, set `NOMAD_BIND_ADDR=0.0.0.0` and update `URL`, then recreate the admin and dozzle containers. Put a reverse proxy with TLS and authentication in front if you do that, and do not expose Command Center to the internet.
+
+The Windows override uses named volumes for MySQL and Redis (to avoid NTFS permission issues), drops the disk-collector `rslave` mount (usage figures then reflect the Docker VM, not Windows drive letters), and leaves the in-app updater off unless you pass `--profile updater` after `NOMAD_HOME` points at the directory that contains `compose.yml`. To build the admin image from this fork instead of pulling the published image, set `NOMAD_BUILD_CONTEXT` to the repository root if needed and run `docker compose ... build admin` before `up -d`.
+
+The in-app updater still expects Linux-style paths inside the sidecar, so on Windows prefer `docker compose pull` and `up -d` until that sidecar is given a configurable compose path.
+
+
 ### Hardware
 
 NOMAD itself is lightweight. What drives your requirements is the content and tools you choose to install, and whether you want to run AI locally.

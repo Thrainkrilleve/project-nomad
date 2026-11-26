@@ -1,0 +1,60 @@
+# Windows (Docker Desktop) overrides for Project NOMAD.
+#
+# Requires Docker Compose v2.24 or newer (!override / !reset).
+#
+# Usage, from a clone of this repository:
+#   docker compose --project-directory <data-dir> \
+#     -f install/management_compose.yaml \
+#     -f install/compose.windows.override.yml \
+#     --env-file <data-dir>/.env up -d
+#
+# The in-app updater sidecar is optional on Windows and is off by default.
+# Start it only after NOMAD_HOME points at the directory that actually contains
+# compose.yml:
+#   docker compose --profile updater ... up -d
+#
+# The disk-collector bind of `/` cannot use rslave on Docker Desktop, so usage
+# figures reflect the Linux VM, not Windows drive letters.
+#
+# To build the admin image from this fork instead of pulling the published
+# image:
+#   docker compose ... build admin && docker compose ... up -d
+# Set NOMAD_BUILD_CONTEXT to this repository's root if the compose files are
+# not being used from install/ in a clone (relative paths are resolved from
+# this file's directory).
+
+services:
+  admin:
+    build:
+      context: ${NOMAD_BUILD_CONTEXT:-..}
+      dockerfile: Dockerfile
+    # Keep a locally built image; pull only if the image is not present.
+    pull_policy: !override missing
+
+  mysql:
+    # Named volumes avoid NTFS permission issues with bind-mounted datadirs.
+    volumes: !override
+      - nomad-mysql:/var/lib/mysql
+
+  redis:
+    volumes: !override
+      - nomad-redis:/data
+
+  updater:
+    profiles: !override
+      - updater
+    volumes: !override
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${NOMAD_HOME:-/opt/project-nomad}:/opt/project-nomad
+      - nomad-update-shared:/shared
+
+  disk-collector:
+    volumes: !override
+      - /:/host:ro
+      - ${NOMAD_STORAGE_HOST:-/opt/project-nomad/storage}:/storage
+
+volumes:
+  nomad-mysql:
+    driver: local
+  nomad-redis:
+    driver: local

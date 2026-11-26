@@ -56,7 +56,7 @@ assert_failure_with() {
   fi
 }
 
-if ! grep -Fq '[[ "${BASH_SOURCE[0]}" == "$0" ]]' "$INSTALLER"; then
+if ! grep -Fq 'if [ "${BASH_SOURCE:-$0}" = "$0" ]; then' "$INSTALLER"; then
   fail "installer can be sourced without running main"
   exit 1
 fi
@@ -183,6 +183,25 @@ if [[ "$main_status" -ne 0 ]] &&
 else
   fail "main fails preflight before creating the installation directory"
   cat /tmp/nomad-preflight-main-test.out
+fi
+
+
+if grep -q 'write_env_file' "$INSTALLER" && grep -q 'chmod 600 "$env_file_path"' "$INSTALLER"; then
+  pass "installer writes a mode-0600 .env file"
+else
+  fail "installer writes a mode-0600 .env file"
+fi
+
+if grep -q 's|APP_KEY=replaceme|' "$INSTALLER" || grep -q 's|DB_PASSWORD=replaceme|' "$INSTALLER"; then
+  fail "installer no longer injects secrets into compose.yml"
+else
+  pass "installer no longer injects secrets into compose.yml"
+fi
+
+if grep -q 'NOMAD_BIND_ADDR:-127.0.0.1' "$COMPOSE_FILE"; then
+  pass "compose defaults published ports to 127.0.0.1"
+else
+  fail "compose defaults published ports to 127.0.0.1"
 fi
 
 rm -f /tmp/nomad-preflight-test.out /tmp/nomad-preflight-main-test.out "$edge_compose"
